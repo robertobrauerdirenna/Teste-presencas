@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161a">
+<title>Presença</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --bg: #14161a;
+    --superficie: #1e2127;
+    --superficie2: #272b33;
+    --borda: #343945;
+    --texto: #f2f4f8;
+    --texto2: #9aa3b2;
+    --ok: #3ddc84;
+    --aviso: #ffc44d;
+    --erro: #ff6b6b;
+    --acento: #5b9dff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--texto);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    display: flex; align-items: center; gap: 10px;
+    padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+    border-bottom: 1px solid var(--borda);
+    background: var(--superficie);
+  }
+  header h1 { font-size: 17px; margin: 0; flex: 1; font-weight: 600; }
+  .pill {
+    font-size: 12px; padding: 4px 9px; border-radius: 999px;
+    background: var(--superficie2); color: var(--texto2); white-space: nowrap;
+  }
+  .pill.on { color: var(--ok); }
+  .pill.off { color: var(--aviso); }
+  main { flex: 1; overflow-y: auto; padding: 14px; }
+  .tela { display: none; }
+  .tela.ativa { display: block; }
+
+  label { display: block; font-size: 13px; color: var(--texto2); margin: 14px 0 5px; }
+  input {
+    width: 100%; padding: 12px; font-size: 16px;
+    background: var(--superficie); color: var(--texto);
+    border: 1px solid var(--borda); border-radius: 10px;
+  }
+  input:focus { outline: 2px solid var(--acento); outline-offset: -1px; }
+  button {
+    width: 100%; padding: 14px; margin-top: 14px; font-size: 16px; font-weight: 600;
+    background: var(--acento); color: #06101f; border: 0; border-radius: 10px;
+  }
+  button.secundario { background: var(--superficie2); color: var(--texto); font-weight: 500; }
+  button:disabled { opacity: .5; }
+
+  #camera { position: relative; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 3/4; }
+  #camera video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #mira {
+    position: absolute; inset: 18%; border: 3px solid rgba(255,255,255,.85);
+    border-radius: 16px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.35);
+  }
+  #retorno {
+    margin-top: 12px; padding: 14px; border-radius: 12px; text-align: center;
+    background: var(--superficie); border: 1px solid var(--borda); min-height: 76px;
+  }
+  #retorno .nome { font-size: 20px; font-weight: 700; }
+  #retorno .msg { font-size: 13px; color: var(--texto2); margin-top: 3px; }
+  #retorno.ok { border-color: var(--ok); }
+  #retorno.ok .nome { color: var(--ok); }
+  #retorno.dup { border-color: var(--aviso); }
+  #retorno.dup .nome { color: var(--aviso); }
+  #retorno.erro { border-color: var(--erro); }
+  #retorno.erro .nome { color: var(--erro); }
+
+  .barra { display: flex; gap: 10px; margin-top: 12px; }
+  .barra button { margin-top: 0; }
+  .resumo { display: flex; gap: 10px; margin: 14px 0 4px; }
+  .cartao {
+    flex: 1; background: var(--superficie); border: 1px solid var(--borda);
+    border-radius: 12px; padding: 10px; text-align: center;
+  }
+  .cartao b { display: block; font-size: 22px; }
+  .cartao span { font-size: 11px; color: var(--texto2); text-transform: uppercase; letter-spacing: .4px; }
+  ul { list-style: none; margin: 10px 0 0; padding: 0; }
+  li {
+    display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+    padding: 10px 12px; background: var(--superficie); border: 1px solid var(--borda);
+    border-radius: 10px; margin-bottom: 6px;
+  }
+  li small { color: var(--texto2); font-size: 12px; white-space: nowrap; }
+  .aviso {
+    background: var(--superficie2); border-left: 3px solid var(--aviso);
+    padding: 10px 12px; border-radius: 8px; font-size: 13px; color: var(--texto2); margin-top: 12px;
+  }
+  .rodape { margin-top: 18px; font-size: 12px; color: var(--texto2); text-align: center; }
+  .rodape a { color: var(--texto2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Presença</h1>
+  <span class="pill" id="pillFila">0 na fila</span>
+  <span class="pill" id="pillRede">...</span>
+</header>
+
+<main>
+
+  <section class="tela ativa" id="telaConfig">
+    <p style="color:var(--texto2);font-size:14px;margin-top:4px">
+      Configure uma vez. Os dados ficam salvos neste celular.
+    </p>
+    <label for="campoUrl">Endereço do sistema (URL do Apps Script)</label>
+    <input id="campoUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec">
+    <label for="campoMonitor">Seu nome</label>
+    <input id="campoMonitor" type="text" autocomplete="off" placeholder="Como está cadastrado na planilha">
+    <label for="campoPin">PIN</label>
+    <input id="campoPin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">
+    <button id="btnEntrar">Entrar</button>
+    <div id="erroConfig" class="aviso" hidden></div>
+  </section>
+
+  <section class="tela" id="telaScanner">
+    <div id="camera"><video id="video" playsinline muted></video><div id="mira"></div></div>
+    <div id="retorno"><div class="nome">Aponte para o QR</div><div class="msg">A leitura é automática</div></div>
+    <div class="barra">
+      <button class="secundario" id="btnManual">Digitar código</button>
+      <button class="secundario" id="btnLista">Ver lista</button>
+    </div>
+  </section>
+
+  <section class="tela" id="telaLista">
+    <div class="resumo">
+      <div class="cartao"><b id="numHoje">0</b><span>presentes hoje</span></div>
+      <div class="cartao"><b id="numFila">0</b><span>aguardando envio</span></div>
+    </div>
+    <div class="aviso" id="avisoOffline" hidden>
+      Sem internet. As leituras estão guardadas no celular e sobem sozinhas quando a conexão voltar.
+    </div>
+    <ul id="listaHoje"></ul>
+    <button class="secundario" id="btnVoltar">Voltar para a leitura</button>
+    <button class="secundario" id="btnSincronizar">Enviar agora</button>
+    <div class="rodape">
+      Monitor: <span id="rodapeMonitor"></span> · <a href="#" id="btnSair">trocar monitor</a>
+    </div>
+  </section>
+
+</main>
+
+<script src="lib/jsQR.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
